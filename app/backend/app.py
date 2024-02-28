@@ -45,7 +45,7 @@ AZURE_OPENAI_CHATGPT_DEPLOYMENT = (
 )
 AZURE_OPENAI_CHATGPT_MODEL_NAME = ( os.environ.get("AZURE_OPENAI_CHATGPT_MODEL_NAME") or "")
 AZURE_OPENAI_CHATGPT_MODEL_VERSION = ( os.environ.get("AZURE_OPENAI_CHATGPT_MODEL_VERSION") or "")
-USE_AZURE_OPENAI_EMBEDDINGS = str_to_bool.get(os.environ.get("USE_AZURE_OPENAI_EMBEDDINGS").lower()) or False
+USE_AZURE_OPENAI_EMBEDDINGS = str(os.environ.get("USE_AZURE_OPENAI_EMBEDDINGS", 'False')).lower() == 'true'
 EMBEDDING_DEPLOYMENT_NAME = ( os.environ.get("EMBEDDING_DEPLOYMENT_NAME") or "")
 AZURE_OPENAI_EMBEDDINGS_MODEL_NAME = ( os.environ.get("AZURE_OPENAI_EMBEDDINGS_MODEL_NAME") or "")
 AZURE_OPENAI_EMBEDDINGS_VERSION = ( os.environ.get("AZURE_OPENAI_EMBEDDINGS_VERSION") or "")
@@ -53,7 +53,7 @@ AZURE_MANAGEMENT_URL = ( os.environ.get("AZURE_MANAGEMENT_URL") or "")
 
 AZURE_OPENAI_SERVICE_KEY = os.environ.get("AZURE_OPENAI_SERVICE_KEY")
 AZURE_SUBSCRIPTION_ID = os.environ.get("AZURE_SUBSCRIPTION_ID")
-IS_GOV_CLOUD_DEPLOYMENT = str_to_bool.get(os.environ.get("IS_GOV_CLOUD_DEPLOYMENT").lower()) or False
+IS_GOV_CLOUD_DEPLOYMENT = str(os.environ.get("IS_GOV_CLOUD_DEPLOYMENT", 'False')).lower() == 'true'
 CHAT_WARNING_BANNER_TEXT = os.environ.get("CHAT_WARNING_BANNER_TEXT") or ""
 APPLICATION_TITLE = os.environ.get("APPLICATION_TITLE") or "Information Assistant, built with Azure OpenAI"
 
@@ -94,7 +94,11 @@ openai.api_version = "2023-06-01-preview"
 # just use 'az login' locally, and managed identity when deployed on Azure). If you need to use keys, use separate AzureKeyCredential instances with the
 # keys for each service
 # If you encounter a blocking error during a DefaultAzureCredntial resolution, you can exclude the problematic credential by using a parameter (ex. exclude_shared_token_cache_credential=True)
-azure_credential = DefaultAzureCredential(authority=authority)
+if (IS_GOV_CLOUD_DEPLOYMENT):
+    azure_credential = DefaultAzureCredential(authority=authority)
+else:
+    azure_credential = DefaultAzureCredential()
+
 azure_search_key_credential = AzureKeyCredential(AZURE_SEARCH_SERVICE_KEY)
 
 # Setup StatusLog to allow access to CosmosDB for logging
@@ -135,9 +139,10 @@ if (IS_GOV_CLOUD_DEPLOYMENT):
 else:
     #Set up OpenAI management client
     openai_mgmt_client = CognitiveServicesManagementClient(
-        credential=azure_credential,
-        subscription_id=AZURE_SUBSCRIPTION_ID,
-        base_url=AZURE_MANAGEMENT_URL)
+            credential=azure_credential,
+            subscription_id=AZURE_SUBSCRIPTION_ID)
+
+
 
     deployment = openai_mgmt_client.deployments.get(
         resource_group_name=AZURE_OPENAI_RESOURCE_GROUP,

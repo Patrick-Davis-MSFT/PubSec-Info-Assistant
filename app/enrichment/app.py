@@ -60,7 +60,7 @@ ENV = {
     "EMBEDDING_VECTOR_SIZE": None,
     "AZURE_SEARCH_SERVICE_ENDPOINT": None,
     "AZURE_BLOB_STORAGE_ENDPOINT": None,
-    "IS_GOV_CLOUD_DEPLOYMENT": None
+    "IS_GOV_CLOUD_DEPLOYMENT": 'false'
 }
 
 for key, value in ENV.items():
@@ -72,7 +72,7 @@ for key, value in ENV.items():
     
 search_creds = AzureKeyCredential(ENV["AZURE_SEARCH_SERVICE_KEY"])
 
-if ENV["IS_GOV_CLOUD_DEPLOYMENT"]:
+if str(ENV["IS_GOV_CLOUD_DEPLOYMENT"]).lower() == 'true':
     openai.api_base = "https://" + ENV["AZURE_OPENAI_SERVICE"] + ".openai.azure.us/"
 else:
     openai.api_base = "https://" + ENV["AZURE_OPENAI_SERVICE"] + ".openai.azure.com/"
